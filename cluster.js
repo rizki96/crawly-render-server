@@ -20,6 +20,9 @@ setInterval(logServerStats, 60000);
 // Define your launch options here
 const launchOptions = {
     headless: "new",
+    // headless: false,
+    javascriptEnabled: false,
+    loadImages: false,
     args: [
         '--no-sandbox',
         '--disable-gpu',
@@ -38,10 +41,10 @@ if (process.env.CHROME_EXECUTABLE_PATH) {
     launchOptions.executablePath = process.env.CHROME_EXECUTABLE_PATH;
 };
 
-let max_concurrency = 2;
+let max_concurrency = 4;
 if (process.env.MAX_CONCURRENCY) {
     max_concurrency = parseInt(process.env.MAX_CONCURRENCY, 10);
-  };
+};
 
 (async () => {
     // Create a cluster with N workers
@@ -59,7 +62,17 @@ if (process.env.MAX_CONCURRENCY) {
                 await page.setExtraHTTPHeaders({ [name]: value });
             }
         }
-        const response = await page.goto(url, {timeout: 60000});
+        await page.setRequestInterception(true);
+        page.on("request", (request) => {
+          if (request.resourceType() === "image") {
+            // console.log("Blocking image request: " + request.url());
+            request.abort();
+          } else {
+            request.continue();
+          }
+        });
+        const response = await page.goto(url, {waitUntil: "load", timeout: 0});
+        //await page.setViewport({ width: 1280, height: 3000 });
         const status_code = response.status()
         // const pageBody = await page.evaluate(() => document.body.innerHTML);
         const finalUrl = page.url();
