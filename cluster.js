@@ -21,7 +21,7 @@ setInterval(logServerStats, 60000);
 const launchOptions = {
     headless: "new",
     // headless: false,
-    javascriptEnabled: false,
+    javascriptEnabled: true,
     loadImages: false,
     args: [
         '--no-sandbox',
